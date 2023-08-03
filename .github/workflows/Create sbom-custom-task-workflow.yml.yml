@@ -27,7 +27,7 @@ jobs:
   SbomResults:
     needs: build
     runs-on: ubuntu-latest
-    name: Servicenow Security Scan Results
+    name: Servicenow SBOM Scan Results
 
     steps:
        - name: ServiceNow DevOps SBOM Scan Results
@@ -39,6 +39,6 @@ jobs:
             instance-url: ${{ secrets.SN_INSTANCE_URL }}
             tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
             context-github: ${{ toJSON(github) }}
-            job-name: 'Servicenow Security Scan Results'
+            job-name: 'Servicenow SBOM Scan Results'
             security-result-attributes: '{"scanner": "Veracode", "applicationName": "Azure", "buildVersion": "v1"}'
 # {"applicationName": "Azure", "buildVersion": "v1"}
