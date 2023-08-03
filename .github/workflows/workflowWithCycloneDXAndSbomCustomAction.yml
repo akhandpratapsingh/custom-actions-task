@@ -25,6 +25,7 @@ jobs:
       run: npm run build
       
   CycloneDX:
+    needs: build
     runs-on: ubuntu-latest
     name: CycloneDX
     steps:
@@ -39,7 +40,7 @@ jobs:
           output: './test.app.bom.xml'
 
   SbomResults:
-    needs: build
+    needs: CycloneDX
     runs-on: ubuntu-latest
     name: Servicenow SBOM Scan Results
 
