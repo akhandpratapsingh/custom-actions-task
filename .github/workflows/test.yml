@@ -24,7 +24,7 @@ jobs:
     - name: Compile
       run: npm run build
 
-  SecurityScanResults:
+  SbomResults:
     needs: build
     runs-on: ubuntu-latest
     name: Servicenow Security Scan Results
