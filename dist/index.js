@@ -9340,7 +9340,6 @@ const axios = __nccwpck_require__(8757);
         core.setFailed(`Exception parsing github context ${e}`);
     }
 
-
     try {
         securityResultAttributes = JSON.parse(securityResultAttributes);
     } catch (e) {
@@ -9436,6 +9435,7 @@ const axios = __nccwpck_require__(8757);
     }
 
 })();
+
 })();
 
 module.exports = __webpack_exports__;
