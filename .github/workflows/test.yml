@@ -30,8 +30,8 @@ jobs:
     name: Servicenow Security Scan Results
 
     steps:
-       - name: ServiceNow DevOps Security Results
-         uses: maheshganji/custom-action-get@sonar
+       - name: ServiceNow DevOps SBOM Scan Results
+         uses: akhandpratapsingh/custom-actions-task@SBOM
          with:
             devops-integration-user-name: ${{ secrets.SN_DEVOPS_USER }}
 #             devops-integration-token: ${{ secrets.SN_DEVOPS_INTEGRATION_TOKEN }}
