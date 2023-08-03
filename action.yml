@@ -1,5 +1,5 @@
-name: 'ServiceNow DevOps Sonar Scan Results'
-description: 'Send Sonar Information to ServiceNow Devops'
+name: 'ServiceNow DevOps SBOM Scan Results'
+description: 'Send SBOM Information to ServiceNow Devops'
 inputs:
   instance-url: 
     description: 'ServiceNow Instance URL'
@@ -11,16 +11,13 @@ inputs:
   devops-integration-token:
     description: 'Devops Integration Token'
     required: false
-  security-tool-id:
-    description: 'Security Tool Id'
-    required: true
   context-github:
     description: 'Github Context'
     required: true
   job-name:
     description: 'Display Name of the Job'
     required: true
-  security-result-attributes: 
+  sbom-result-attributes: 
     description: 'Security Results Attributes'
   tool-id:
     description: 'Orchestration Tool Id'
