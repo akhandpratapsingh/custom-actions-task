@@ -116,6 +116,8 @@ const fs = require('fs');
         } else {
             core.setFailed(`ServiceNow Software Quality Results are NOT created. Please check ServiceNow logs for more details.`);
         }
+        console.log(e.message);
+        console.log(JSON.stringify(e));
     }
 
 })();
