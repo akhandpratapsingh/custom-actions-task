@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const axios = require('axios');
-const fs = require('fs');
+const fs = require('fstream');
 //const request = require('request');
 
 (async function main() {
@@ -23,8 +23,9 @@ const fs = require('fs');
     //TODO : File preValidations
     let fileStreamData;
     try {
-        fileStreamData = fs.createReadStream(fileName);
+        // fileStreamData = fs.createReadStream(fileName);
         //fileStreamData = fs.readFileSync(fileName);
+        fileStreamData = fs.Reader(fileName);
         console.log(fileStreamData);
         console.log("\n\n" + JSON.stringify(fileStreamData));
     } catch (e) {
