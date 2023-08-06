@@ -102,7 +102,7 @@ const fs = require('fs');
 
         responseData = await axios.post(restendpoint, fileStreamData, httpHeaders);
         
-        console.log(JSON.stringify(responseData));
+        console.log(responseData.data);
         if (responseData.data && responseData.data.result)
             console.log("\n \x1b[1m\x1b[32m SUCCESS: Sbom Scan registration was successful" + '\x1b[0m\x1b[0m');
         else
@@ -115,6 +115,7 @@ const fs = require('fs');
         } else {
             core.setFailed(`ServiceNow Sbom Results are NOT created. Please check ServiceNow logs for more details.`);
         }
+        console.log(JSON.stringify(e));
     }
 
 })();
