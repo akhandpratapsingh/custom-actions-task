@@ -16261,7 +16261,7 @@ const fs = __nccwpck_require__(7158);
         //fileStreamData = fs.readFileSync(fileName);
         fileStreamData = fs.Reader(fileName);
         console.log(fileStreamData);
-        console.log("\n\n" + JSON.stringify(fileStreamData));
+        //console.log("\n\n" + JSON.stringify(fileStreamData));
     } catch (e) {
         core.setFailed(`Exception creating fileStreamData ${e}`);
     }
