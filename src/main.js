@@ -24,7 +24,7 @@ const fs = require('fs');
     let fileStreamData;
     try {
         fileStreamData = fs.createReadStream(fileName);
-        console.log(fileStreamData);
+        //console.log(fileStreamData);
     } catch (e) {
         core.setFailed(`Exception creating fileStreamData ${e}`);
     }
@@ -54,8 +54,8 @@ const fs = require('fs');
             pipelineInfo: pipelineInfo,
             securityResultAttributes: fileStreamData
         };
-        console.log(JSON.stringify(payload));
-        core.debug('Security scan results Custon Action payload is : ${JSON.stringify(pipelineInfo)}\n\n');
+        //console.log(JSON.stringify(payload));
+        core.debug('Sbom scan results Custon Action payload is : ${JSON.stringify(pipelineInfo)}\n\n');
     } catch (e) {
         core.setFailed(`Exception setting the payload ${e}`);
         return;
@@ -84,7 +84,6 @@ const fs = require('fs');
 
             console.log("I have enternted ere else "  + username + "ppassword"+ password);
 
-            //restendpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/security?toolId=${toolId}`;
             restendpoint = `${instanceUrl}/api/sn_devops/v1/devops/upload`;
             const tokenBasicAuth = `${username}:${password}`;
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
@@ -104,23 +103,21 @@ const fs = require('fs');
 
         responseData = await axios.post(restendpoint, fileStreamData, httpHeaders);
 
+        console.log("\n\nResponse ******** \n\n");
+        console.log(JSON.stringify(responseData));
+
         if (responseData.data && responseData.data.result)
-            console.log("\n \x1b[1m\x1b[32m SUCCESS: Security Scan registration was successful" + '\x1b[0m\x1b[0m');
+            console.log("\n \x1b[1m\x1b[32m SUCCESS: Sbom Scan registration was successful" + '\x1b[0m\x1b[0m');
         else
-            console.log("FAILED: Security Scan could not be registered");
+            console.log("FAILED: Sbom Scan could not be registered");
     } catch (e) {
         if (e.message.includes('ECONNREFUSED') || e.message.includes('ENOTFOUND') || e.message.includes('405')) {
             core.setFailed('ServiceNow Instance URL is NOT valid. Please correct the URL and try again.');
         } else if (e.message.includes('401')) {
             core.setFailed('Invalid Credentials. Please correct the credentials and try again.');
         } else {
-            core.setFailed(`ServiceNow Software Quality Results are NOT created. Please check ServiceNow logs for more details.`);
+            core.setFailed(`ServiceNow Sbom Results are NOT created. Please check ServiceNow logs for more details.`);
         }
-        console.log("\n]\n\n");
-        console.log("Error Message ********");
-        console.log(e.message);
-        console.log("\n]\n\n");
-        console.log(JSON.stringify(e));
     }
 
 })();
