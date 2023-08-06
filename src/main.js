@@ -1,5 +1,7 @@
 const core = require('@actions/core');
 const axios = require('axios');
+const fs = require('fs-extra')
+//const request = require('request');
 
 (async function main() {
     let instanceUrl = core.getInput('instance-url', { required: true });
@@ -7,9 +9,11 @@ const axios = require('axios');
     const username = core.getInput('devops-integration-user-name');
     const password = core.getInput('devops-integration-user-password');
     const token = core.getInput('devops-integration-token', { required: false });
+    const fileName = core.getInput('file-name', { required: true });
+    let fileStreamData = '';
 
     const jobname = core.getInput('job-name', { required: true });
-    let securityResultAttributes = core.getInput('security-result-attributes', { required: true });
+    //let securityResultAttributes = core.getInput('security-result-attributes', { required: true });
 
     let githubContext = core.getInput('context-github', { required: true });
 
@@ -20,9 +24,10 @@ const axios = require('axios');
     }
 
     try {
-        securityResultAttributes = JSON.parse(securityResultAttributes);
+        fileStreamData = fs.createReadStream(fileName);
+        console.log(fileStreamData);
     } catch (e) {
-        core.setFailed(`Exception parsing securityResultAttributes ${e}`);
+        core.setFailed(`Exception creating fileStreamData ${e}`);
     }
 
     let payload;
@@ -48,9 +53,9 @@ const axios = require('axios');
 
         payload = {
             pipelineInfo: pipelineInfo,
-            securityResultAttributes: securityResultAttributes
+            fileStreamData: fileStreamData
         };
-
+        console.log(JSON.stringify(payload));
         core.debug('Security scan results Custon Action payload is : ${JSON.stringify(pipelineInfo)}\n\n');
     } catch (e) {
         core.setFailed(`Exception setting the payload ${e}`);
