@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const axios = require('axios');
-const fs = require('fs-extra')
+const fs = require('fs');
 //const request = require('request');
 
 (async function main() {
