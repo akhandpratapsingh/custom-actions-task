@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const axios = require('axios');
-const fs = require('fs');
+const fs = require('fs-extra');
 //const request = require('request');
 
 (async function main() {
@@ -20,10 +20,12 @@ const fs = require('fs');
         core.setFailed(`Exception parsing github context ${e}`);
     }
 
+    //TODO : File preValidations
     let fileStreamData;
     try {
-        fileStreamData = fs.createReadStream(fileName);
-        //console.log(fileStreamData);
+        // fileStreamData = fs.createReadStream(fileName);
+        fileStreamData = fs.readFileSync(fileName);
+        console.log(fileStreamData);
     } catch (e) {
         core.setFailed(`Exception creating fileStreamData ${e}`);
     }
@@ -101,7 +103,7 @@ const fs = require('fs');
 
 
         responseData = await axios.post(restendpoint, fileStreamData, httpHeaders);
-        
+        // TODO response validations + SysId check
         console.log(responseData.data);
         if (responseData.data && responseData.data.result)
             console.log("\n \x1b[1m\x1b[32m SUCCESS: Sbom Scan registration was successful" + '\x1b[0m\x1b[0m');
