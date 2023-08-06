@@ -102,7 +102,20 @@ const fs = require('fs');
         }
 
 
-        responseData = await axios.post(restendpoint, fileStreamData, httpHeaders);
+        //responseData = await axios.post(restendpoint, fileStreamData, httpHeaders);
+
+        responseData = axios({
+            url: restendpoint,
+            method: "POST",
+            data: fileStreamData,
+            auth: {
+            username: 'devops.system',
+            password: 'Test@123'
+            },
+            headers: {
+            'Content-Type': 'application/json'
+            }
+            });
 
         if (responseData.data && responseData.data.result)
             console.log("\n \x1b[1m\x1b[32m SUCCESS: Security Scan registration was successful" + '\x1b[0m\x1b[0m');
