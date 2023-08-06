@@ -79,7 +79,7 @@ const fs = require('fstream');
             restendpoint = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
             const defaultHeadersForToken = {
                 'Content-Type': 'application/octet-stream',
-                'Accept': 'application/json',
+                'Accept': 'application/octet-strea',
                 'Authorization': 'sn_devops.DevOpsToken ' + `${toolId}:${token}`
             };
             httpHeaders = { headers: defaultHeadersForToken };
@@ -94,7 +94,7 @@ const fs = require('fstream');
 
             const defaultHeadersForBasicAuth = {
                 'Content-Type': 'application/octet-stream',
-                'Accept': 'application/json',
+                'Accept': 'application/octet-strea',
                 'Authorization': 'Basic ' + `${encodedTokenForBasicAuth}`
             };
             httpHeaders = { headers: defaultHeadersForBasicAuth };
