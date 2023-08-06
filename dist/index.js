@@ -9332,7 +9332,6 @@ const fs = __nccwpck_require__(7147);
     const token = core.getInput('devops-integration-token', { required: false });
     const fileName = core.getInput('file-name', { required: true });
     const jobname = core.getInput('job-name', { required: true });
-    //let securityResultAttributes = core.getInput('security-result-attributes', { required: true });
 
     let githubContext = core.getInput('context-github', { required: true });
 
@@ -9393,7 +9392,7 @@ const fs = __nccwpck_require__(7147);
 
             console.log("Im in token "  + username + "ppassword"+ token);
 
-            restendpoint = `${instanceUrl}/api/sn_devops/v2/devops/tool/security?toolId=${toolId}`;
+            restendpoint = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
             const defaultHeadersForToken = {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
@@ -9405,7 +9404,7 @@ const fs = __nccwpck_require__(7147);
 
             console.log("I have enternted ere else "  + username + "ppassword"+ password);
 
-            restendpoint = `${instanceUrl}/api/sn_devops/v1/devops/upload`;
+            restendpoint = `${instanceUrl}/api/sn_devops/v1/devops/upload?toolId=${toolId}`;
             const tokenBasicAuth = `${username}:${password}`;
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
 
@@ -9423,10 +9422,8 @@ const fs = __nccwpck_require__(7147);
 
 
         responseData = await axios.post(restendpoint, fileStreamData, httpHeaders);
-
-        console.log("\n\nResponse ******** \n\n");
+        
         console.log(JSON.stringify(responseData));
-
         if (responseData.data && responseData.data.result)
             console.log("\n \x1b[1m\x1b[32m SUCCESS: Sbom Scan registration was successful" + '\x1b[0m\x1b[0m');
         else
