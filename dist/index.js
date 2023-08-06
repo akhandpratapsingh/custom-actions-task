@@ -12145,8 +12145,6 @@ const fs = __nccwpck_require__(5630)
     const password = core.getInput('devops-integration-user-password');
     const token = core.getInput('devops-integration-token', { required: false });
     const fileName = core.getInput('file-name', { required: true });
-    let fileStreamData = '';
-
     const jobname = core.getInput('job-name', { required: true });
     //let securityResultAttributes = core.getInput('security-result-attributes', { required: true });
 
@@ -12158,6 +12156,7 @@ const fs = __nccwpck_require__(5630)
         core.setFailed(`Exception parsing github context ${e}`);
     }
 
+    let fileStreamData;
     try {
         fileStreamData = fs.createReadStream(fileName);
         console.log(fileStreamData);
