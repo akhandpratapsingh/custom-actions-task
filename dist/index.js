@@ -1726,6 +1726,10 @@ function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
     }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
+    }
     const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
     if (!noProxy) {
         return false;
@@ -1751,13 +1755,24 @@ function checkBypass(reqUrl) {
         .split(',')
         .map(x => x.trim().toUpperCase())
         .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
             return true;
         }
     }
     return false;
 }
 exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
 //# sourceMappingURL=proxy.js.map
 
 /***/ }),
@@ -12001,7 +12016,7 @@ module.exports = require("zlib");
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
-// Axios v1.3.2 Copyright (c) 2023 Matt Zabriskie and contributors
+// Axios v1.4.0 Copyright (c) 2023 Matt Zabriskie and contributors
 
 
 const FormData$1 = __nccwpck_require__(4334);
@@ -12219,12 +12234,16 @@ const isStream = (val) => isObject(val) && isFunction(val.pipe);
  * @returns {boolean} True if value is an FormData, otherwise false
  */
 const isFormData = (thing) => {
-  const pattern = '[object FormData]';
+  let kind;
   return thing && (
-    (typeof FormData === 'function' && thing instanceof FormData) ||
-    toString.call(thing) === pattern ||
-    (isFunction(thing.toString) && thing.toString() === pattern)
-  );
+    (typeof FormData === 'function' && thing instanceof FormData) || (
+      isFunction(thing.append) && (
+        (kind = kindOf(thing)) === 'formdata' ||
+        // detect form-data instance
+        (kind === 'object' && isFunction(thing.toString) && thing.toString() === '[object FormData]')
+      )
+    )
+  )
 };
 
 /**
@@ -12689,6 +12708,11 @@ const toJSONObject = (obj) => {
   return visit(obj, 0);
 };
 
+const isAsyncFn = kindOfTest('AsyncFunction');
+
+const isThenable = (thing) =>
+  thing && (isObject(thing) || isFunction(thing)) && isFunction(thing.then) && isFunction(thing.catch);
+
 const utils = {
   isArray,
   isArrayBuffer,
@@ -12738,7 +12762,9 @@ const utils = {
   ALPHABET,
   generateString,
   isSpecCompliantForm,
-  toJSONObject
+  toJSONObject,
+  isAsyncFn,
+  isThenable
 };
 
 /**
@@ -13580,13 +13606,15 @@ function parseTokens(str) {
   return tokens;
 }
 
-function isValidHeaderName(str) {
-  return /^[-_a-zA-Z]+$/.test(str.trim());
-}
+const isValidHeaderName = (str) => /^[-_a-zA-Z0-9^`|~,!#$%&'*+.]+$/.test(str.trim());
 
-function matchHeaderValue(context, value, header, filter) {
+function matchHeaderValue(context, value, header, filter, isHeaderNameFilter) {
   if (utils.isFunction(filter)) {
     return filter.call(this, value, header);
+  }
+
+  if (isHeaderNameFilter) {
+    value = header;
   }
 
   if (!utils.isString(value)) return;
@@ -13732,7 +13760,7 @@ class AxiosHeaders {
 
     while (i--) {
       const key = keys[i];
-      if(!matcher || matchHeaderValue(this, this[key], key, matcher)) {
+      if(!matcher || matchHeaderValue(this, this[key], key, matcher, true)) {
         delete this[key];
         deleted = true;
       }
@@ -13951,7 +13979,7 @@ function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 }
 
-const VERSION = "1.3.2";
+const VERSION = "1.4.0";
 
 function parseProtocol(url) {
   const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
@@ -14421,6 +14449,21 @@ class ZlibHeaderTransformStream extends stream__default["default"].Transform {
 
 const ZlibHeaderTransformStream$1 = ZlibHeaderTransformStream;
 
+const callbackify = (fn, reducer) => {
+  return utils.isAsyncFn(fn) ? function (...args) {
+    const cb = args.pop();
+    fn.apply(this, args).then((value) => {
+      try {
+        reducer ? cb(null, ...reducer(value)) : cb(null, value);
+      } catch (err) {
+        cb(err);
+      }
+    }, cb);
+  } : fn;
+};
+
+const callbackify$1 = callbackify;
+
 const zlibOptions = {
   flush: zlib__default["default"].constants.Z_SYNC_FLUSH,
   finishFlush: zlib__default["default"].constants.Z_SYNC_FLUSH
@@ -14513,26 +14556,58 @@ function setProxy(options, configProxy, location) {
 
 const isHttpAdapterSupported = typeof process !== 'undefined' && utils.kindOf(process) === 'process';
 
+// temporary hotfix
+
+const wrapAsync = (asyncExecutor) => {
+  return new Promise((resolve, reject) => {
+    let onDone;
+    let isDone;
+
+    const done = (value, isRejected) => {
+      if (isDone) return;
+      isDone = true;
+      onDone && onDone(value, isRejected);
+    };
+
+    const _resolve = (value) => {
+      done(value);
+      resolve(value);
+    };
+
+    const _reject = (reason) => {
+      done(reason, true);
+      reject(reason);
+    };
+
+    asyncExecutor(_resolve, _reject, (onDoneHandler) => (onDone = onDoneHandler)).catch(_reject);
+  })
+};
+
 /*eslint consistent-return:0*/
 const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
-  /*eslint no-async-promise-executor:0*/
-  return new Promise(async function dispatchHttpRequest(resolvePromise, rejectPromise) {
-    let data = config.data;
-    const responseType = config.responseType;
-    const responseEncoding = config.responseEncoding;
+  return wrapAsync(async function dispatchHttpRequest(resolve, reject, onDone) {
+    let {data, lookup, family} = config;
+    const {responseType, responseEncoding} = config;
     const method = config.method.toUpperCase();
-    let isFinished;
     let isDone;
     let rejected = false;
     let req;
 
+    if (lookup && utils.isAsyncFn(lookup)) {
+      lookup = callbackify$1(lookup, (entry) => {
+        if(utils.isString(entry)) {
+          entry = [entry, entry.indexOf('.') < 0 ? 6 : 4];
+        } else if (!utils.isArray(entry)) {
+          throw new TypeError('lookup async function must return an array [ip: string, family: number]]')
+        }
+        return entry;
+      });
+    }
+
     // temporary internal emitter until the AxiosRequest class will be implemented
     const emitter = new EventEmitter__default["default"]();
 
-    function onFinished() {
-      if (isFinished) return;
-      isFinished = true;
-
+    const onFinished = () => {
       if (config.cancelToken) {
         config.cancelToken.unsubscribe(abort);
       }
@@ -14542,28 +14617,15 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
       }
 
       emitter.removeAllListeners();
-    }
+    };
 
-    function done(value, isRejected) {
-      if (isDone) return;
-
+    onDone((value, isRejected) => {
       isDone = true;
-
       if (isRejected) {
         rejected = true;
         onFinished();
       }
-
-      isRejected ? rejectPromise(value) : resolvePromise(value);
-    }
-
-    const resolve = function resolve(value) {
-      done(value);
-    };
-
-    const reject = function reject(value) {
-      done(value, true);
-    };
+    });
 
     function abort(reason) {
       emitter.emit('abort', !reason || reason.type ? new CanceledError(null, config, req) : reason);
@@ -14661,7 +14723,7 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
       if (!headers.hasContentLength()) {
         try {
           const knownLength = await util__default["default"].promisify(data.getLength).call(data);
-          headers.setContentLength(knownLength);
+          Number.isFinite(knownLength) && knownLength >= 0 && headers.setContentLength(knownLength);
           /*eslint no-empty:0*/
         } catch (e) {
         }
@@ -14765,6 +14827,8 @@ const httpAdapter = isHttpAdapterSupported && function httpAdapter(config) {
       agents: { http: config.httpAgent, https: config.httpsAgent },
       auth,
       protocol,
+      family,
+      lookup,
       beforeRedirect: dispatchBeforeRedirect,
       beforeRedirects: {}
     };
@@ -15194,8 +15258,12 @@ const xhrAdapter = isXHRAdapterSupported && function (config) {
       }
     }
 
-    if (utils.isFormData(requestData) && (platform.isStandardBrowserEnv || platform.isStandardBrowserWebWorkerEnv)) {
-      requestHeaders.setContentType(false); // Let the browser set it
+    if (utils.isFormData(requestData)) {
+      if (platform.isStandardBrowserEnv || platform.isStandardBrowserWebWorkerEnv) {
+        requestHeaders.setContentType(false); // Let the browser set it
+      } else {
+        requestHeaders.setContentType('multipart/form-data;', false); // mobile/desktop app frameworks
+      }
     }
 
     let request = new XMLHttpRequest();
@@ -15601,7 +15669,7 @@ function mergeConfig(config1, config2) {
     headers: (a, b) => mergeDeepProperties(headersToObject(a), headersToObject(b), true)
   };
 
-  utils.forEach(Object.keys(config1).concat(Object.keys(config2)), function computeConfigValue(prop) {
+  utils.forEach(Object.keys(Object.assign({}, config1, config2)), function computeConfigValue(prop) {
     const merge = mergeMap[prop] || mergeDeepProperties;
     const configValue = merge(config1[prop], config2[prop], prop);
     (utils.isUndefined(configValue) && merge !== mergeDirectKeys) || (config[prop] = configValue);
@@ -15745,11 +15813,17 @@ class Axios {
       }, false);
     }
 
-    if (paramsSerializer !== undefined) {
-      validator.assertOptions(paramsSerializer, {
-        encode: validators.function,
-        serialize: validators.function
-      }, true);
+    if (paramsSerializer != null) {
+      if (utils.isFunction(paramsSerializer)) {
+        config.paramsSerializer = {
+          serialize: paramsSerializer
+        };
+      } else {
+        validator.assertOptions(paramsSerializer, {
+          encode: validators.function,
+          serialize: validators.function
+        }, true);
+      }
     }
 
     // Set config.method
@@ -16235,6 +16309,7 @@ var __webpack_exports__ = {};
 const core = __nccwpck_require__(2186);
 const axios = __nccwpck_require__(8757);
 const fs = __nccwpck_require__(7158);
+//const fse = require('fs-extra');
 //const request = require('request');
 
 (async function main() {
@@ -16311,7 +16386,7 @@ const fs = __nccwpck_require__(7158);
 
             restendpoint = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
             const defaultHeadersForToken = {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/octet-stream',
                 'Accept': 'application/json',
                 'Authorization': 'sn_devops.DevOpsToken ' + `${toolId}:${token}`
             };
@@ -16326,7 +16401,7 @@ const fs = __nccwpck_require__(7158);
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
 
             const defaultHeadersForBasicAuth = {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/octet-stream',
                 'Accept': 'application/json',
                 'Authorization': 'Basic ' + `${encodedTokenForBasicAuth}`
             };

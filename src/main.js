@@ -1,6 +1,7 @@
 const core = require('@actions/core');
 const axios = require('axios');
 const fs = require('fstream');
+//const fse = require('fs-extra');
 //const request = require('request');
 
 (async function main() {
@@ -77,7 +78,7 @@ const fs = require('fstream');
 
             restendpoint = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
             const defaultHeadersForToken = {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/octet-stream',
                 'Accept': 'application/json',
                 'Authorization': 'sn_devops.DevOpsToken ' + `${toolId}:${token}`
             };
@@ -92,7 +93,7 @@ const fs = require('fstream');
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
 
             const defaultHeadersForBasicAuth = {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/octet-stream',
                 'Accept': 'application/json',
                 'Authorization': 'Basic ' + `${encodedTokenForBasicAuth}`
             };
