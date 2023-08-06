@@ -52,7 +52,7 @@ const fs = require('fs');
 
         payload = {
             pipelineInfo: pipelineInfo,
-            fileStreamData: fileStreamData
+            securityResultAttributes: fileStreamData
         };
         console.log(JSON.stringify(payload));
         core.debug('Security scan results Custon Action payload is : ${JSON.stringify(pipelineInfo)}\n\n');
