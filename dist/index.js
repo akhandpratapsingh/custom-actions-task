@@ -9450,7 +9450,10 @@ const fs = __nccwpck_require__(7147);
         } else {
             core.setFailed(`ServiceNow Software Quality Results are NOT created. Please check ServiceNow logs for more details.`);
         }
+        console.log("\n]\n\n");
+        console.log("Error Message ********");
         console.log(e.message);
+        console.log("\n]\n\n");
         console.log(JSON.stringify(e));
     }
 
