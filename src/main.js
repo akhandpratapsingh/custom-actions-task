@@ -26,7 +26,7 @@ const fs = require('fstream');
         fileStreamData = fs.Reader(filePath);
     } catch (e) {
         core.setFailed(`${filePath} path is incorrect or the file does not exist: ${e}`);
-        return;
+        //return;
     }
 
     let httpHeaders;
