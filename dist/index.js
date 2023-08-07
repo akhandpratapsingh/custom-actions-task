@@ -16481,8 +16481,10 @@ const fs = __nccwpck_require__(7158);
     try{
 
         // API call to register SBOM 
-        console.log(restEndpoint);
+        console.log(payload);
         console.log(httpHeaders);
+        console.log(restEndpoint);
+        
         responseData = await axios.post(restEndpoint, JSON.stringify(payload), httpHeaders);
 
         console.log(responseData.data); // TO REMOVE

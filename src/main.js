@@ -154,8 +154,10 @@ const fs = require('fstream');
     try{
 
         // API call to register SBOM 
-        console.log(restEndpoint);
+        console.log(payload);
         console.log(httpHeaders);
+        console.log(restEndpoint);
+        
         responseData = await axios.post(restEndpoint, JSON.stringify(payload), httpHeaders);
 
         console.log(responseData.data); // TO REMOVE
