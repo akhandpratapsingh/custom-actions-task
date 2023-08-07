@@ -16396,12 +16396,12 @@ const fs = __nccwpck_require__(7158);
             console.log("I have enternted ere else "  + username + "ppassword"+ password);
 
             restendpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/sbom?toolId=${toolId}`;
-            restendpointUploadFile = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
+            restendpointUploadFile = `${instanceUrl}/api/sn_devops/v1/devops/upload?toolId=${toolId}`;
             const tokenBasicAuth = `${username}:${password}`;
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
 
             const defaultHeaders = {
-                'Content-Type': 'application/octet-stream',
+                'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'Authorization': 'Basic ' + `${encodedTokenForBasicAuth}`
             };
@@ -16437,9 +16437,8 @@ const fs = __nccwpck_require__(7158);
         } else if (e.message.includes('401')) {
             core.setFailed('Invalid Credentials. Please correct the credentials and try again.');
         } else {
-            core.setFailed(`ServiceNow Sbom Results are NOT created. Please check ServiceNow logs for more details.`);
+            core.setFailed(`FAILED: Failure while uploading the file ${filePath} : ${e}`);
         }
-        console.log(`FAILED: Failure while uploading the file ${filePath} : ${e}`);
         return;
     }
 
@@ -16491,7 +16490,7 @@ const fs = __nccwpck_require__(7158);
             console.log("FAILED: Sbom Scan could not be registered");
     } catch (e) {
         core.setFailed(`ServiceNow Sbom Scan Results are NOT created. Please check ServiceNow logs for more details.`);
-        console.log(`FAILED: ${e}`);
+        console.log(`FAILURE: ${e}`);
     }
 
 })();
