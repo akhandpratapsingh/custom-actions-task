@@ -16375,7 +16375,7 @@ const fs = __nccwpck_require__(7158);
 
             console.log("Im in token "  + username + "ppassword"+ token);
 
-            restEndpoint = `${instanceUrl}/api/sn_devops/v2/devops/tool/sbom?toolId=${toolId}`;
+            restEndpoint = `${instanceUrl}/api/sn_devops/v2/devops/tool/security?toolId=${toolId}`;
             restEndpointUploadFile = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
 
             const defaultHeaders = {
@@ -16395,7 +16395,7 @@ const fs = __nccwpck_require__(7158);
 
             console.log("I have enternted ere else "  + username + "ppassword"+ password);
 
-            restEndpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/sbom?toolId=${toolId}`;
+            restEndpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/security?toolId=${toolId}`;
             restEndpointUploadFile = `${instanceUrl}/api/sn_devops/v1/devops/upload?toolId=${toolId}`;
             const tokenBasicAuth = `${username}:${password}`;
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
