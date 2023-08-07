@@ -28,7 +28,7 @@ const fse = require('fs-extra');
         if(exists)
             fileStreamData = fs.Reader(filePath);
         else{
-            core.setFailed(`${filePath} path is incorrect or the file does not exist: ${e}`);
+            core.setFailed(`${filePath} path is incorrect or the file does not exist`);
             return;
         }
     } catch (e) {

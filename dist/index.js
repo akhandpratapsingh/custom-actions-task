@@ -18188,7 +18188,7 @@ const fse = __nccwpck_require__(5630);
         if(exists)
             fileStreamData = fs.Reader(filePath);
         else{
-            core.setFailed(`${filePath} path is incorrect or the file does not exist: ${e}`);
+            core.setFailed(`${filePath} path is incorrect or the file does not exist`);
             return;
         }
     } catch (e) {
