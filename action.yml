@@ -20,8 +20,11 @@ inputs:
   tool-id:
     description: 'Orchestration Tool Id'
     required: true
-  file-name:
-    description: 'SBOM file path'
+  file-path:
+    description: 'SBOM File Path'
+    required: true
+  model-id:
+    description: 'SBOM Model Id'
     required: true
 branding:
   icon: 'refresh-ccw'
