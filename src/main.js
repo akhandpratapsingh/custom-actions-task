@@ -31,8 +31,8 @@ const fs = require('fstream');
 
     let httpHeaders;
     let httpHeadersForStream;
-    let restendpoint;
-    let restendpointUploadFile;
+    let restEndpoint;
+    let restEndpointUploadFile;
     let uploadedFileSysId;
 
     try {
@@ -48,8 +48,8 @@ const fs = require('fstream');
 
             console.log("Im in token "  + username + "ppassword"+ token);
 
-            restendpoint = `${instanceUrl}/api/sn_devops/v2/devops/tool/sbom?toolId=${toolId}`;
-            restendpointUploadFile = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
+            restEndpoint = `${instanceUrl}/api/sn_devops/v2/devops/tool/sbom?toolId=${toolId}`;
+            restEndpointUploadFile = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
 
             const defaultHeaders = {
                 'Content-Type': 'application/json',
@@ -68,8 +68,8 @@ const fs = require('fstream');
 
             console.log("I have enternted ere else "  + username + "ppassword"+ password);
 
-            restendpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/sbom?toolId=${toolId}`;
-            restendpointUploadFile = `${instanceUrl}/api/sn_devops/v1/devops/upload?toolId=${toolId}`;
+            restEndpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/sbom?toolId=${toolId}`;
+            restEndpointUploadFile = `${instanceUrl}/api/sn_devops/v1/devops/upload?toolId=${toolId}`;
             const tokenBasicAuth = `${username}:${password}`;
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
 
@@ -92,7 +92,7 @@ const fs = require('fstream');
         }
 
         // API call
-        responseData = await axios.post(restendpointUploadFile, fileStreamData, httpHeadersForStream);
+        responseData = await axios.post(restEndpointUploadFile, fileStreamData, httpHeadersForStream);
         console.log(responseData.data);  // TO Remove
 
         //API response check
