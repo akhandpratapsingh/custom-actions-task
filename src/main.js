@@ -10,7 +10,7 @@ const fs = require('fstream');
     const token = core.getInput('devops-integration-token', { required: false });
     const jobname = core.getInput('job-name', { required: true });
     const filePath = core.getInput('file-path', { required: true });
-    const modelId = core.getInput('model-id', { required: true });
+    const modelId = core.getInput('model-id');
 
     let githubContext = core.getInput('context-github', { required: true });
 
@@ -48,7 +48,7 @@ const fs = require('fstream');
 
             console.log("Im in token "  + username + "ppassword"+ token);
 
-            restEndpoint = `${instanceUrl}/api/sn_devops/v2/devops/tool/security?toolId=${toolId}`;
+            restEndpoint = `${instanceUrl}/api/sn_devops/v2/devops/tool/sbom?toolId=${toolId}`;
             restEndpointUploadFile = `${instanceUrl}/api/sn_devops/v2/devops/upload?toolId=${toolId}`;
 
             const defaultHeaders = {
@@ -68,7 +68,7 @@ const fs = require('fstream');
 
             console.log("I have enternted ere else "  + username + "ppassword"+ password);
 
-            restEndpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/security?toolId=${toolId}`;
+            restEndpoint = `${instanceUrl}/api/sn_devops/v1/devops/tool/sbom?toolId=${toolId}`;
             restEndpointUploadFile = `${instanceUrl}/api/sn_devops/v1/devops/upload?toolId=${toolId}`;
             const tokenBasicAuth = `${username}:${password}`;
             const encodedTokenForBasicAuth = Buffer.from(tokenBasicAuth).toString('base64');
@@ -137,9 +137,10 @@ const fs = require('fstream');
         };
 
         sbomMetaData = {
-            uploadFileId: uploadedFileSysId,
-            modelId: modelId
+            uploadFileId: uploadedFileSysId
         };
+        if(modelId)
+            sbomMetaData.modelId = modelId;
 
         payload = {
             pipelineInfo: pipelineInfo,
@@ -154,10 +155,6 @@ const fs = require('fstream');
     try{
 
         // API call to register SBOM 
-        console.log(payload);
-        console.log(httpHeaders);
-        console.log(restEndpoint);
-        
         responseData = await axios.post(restEndpoint, JSON.stringify(payload), httpHeaders);
 
         console.log(responseData.data); // TO REMOVE

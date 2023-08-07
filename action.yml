@@ -25,7 +25,6 @@ inputs:
     required: true
   model-id:
     description: 'SBOM Model Id'
-    required: true
 branding:
   icon: 'refresh-ccw'
   color: 'green'
