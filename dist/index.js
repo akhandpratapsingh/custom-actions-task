@@ -16426,7 +16426,7 @@ const fs = __nccwpck_require__(7158);
         if (responseData.data && responseData.data.result && 
             responseData.data.result.status === 'Success' && responseData.data.result.attachmentId){
                 uploadedFileSysId = responseData.data.result.attachmentId;
-                console.log(`\n \x1b[1m\x1b[32m Success: ${filePath} uploaded successfully : ${uploadedFileSysId} \x1b[0m\x1b[0m`);
+                console.log(`Success: ${filePath} uploaded successfully : ${uploadedFileSysId}`);
         }else{
             core.setFailed(`FAILED: Sbom Scan could not be registered, failed while uploading the ${filePath}`);
         }
@@ -16481,6 +16481,8 @@ const fs = __nccwpck_require__(7158);
     try{
 
         // API call to register SBOM 
+        console.log(restEndpoint);
+        console.log(httpHeaders);
         responseData = await axios.post(restEndpoint, JSON.stringify(payload), httpHeaders);
 
         console.log(responseData.data); // TO REMOVE
