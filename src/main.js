@@ -1,6 +1,7 @@
 const core = require('@actions/core');
 const axios = require('axios');
 const fs = require('fstream');
+const fse = require('fs-extra');
 
 (async function main() {
     let instanceUrl = core.getInput('instance-url', { required: true });
@@ -23,10 +24,16 @@ const fs = require('fstream');
     // File Stream
     let fileStreamData;
     try {
-        fileStreamData = fs.Reader(filePath);
+        const exists = await fse.pathExists(filePath);
+        if(exists)
+            fileStreamData = fs.Reader(filePath);
+        else{
+            core.setFailed(`${filePath} path is incorrect or the file does not exist: ${e}`);
+            return;
+        }
     } catch (e) {
         core.setFailed(`${filePath} path is incorrect or the file does not exist: ${e}`);
-        //return;
+        return;
     }
 
     let httpHeaders;
