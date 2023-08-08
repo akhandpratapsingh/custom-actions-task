@@ -4039,7 +4039,7 @@ module.exports = function(dst, src) {
 
 /***/ }),
 
-/***/ 9618:
+/***/ 3338:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4062,18 +4062,24 @@ function copySync (src, dest, opts) {
 
   // Warn about using preserveTimestamps on 32-bit node
   if (opts.preserveTimestamps && process.arch === 'ia32') {
-    process.emitWarning(
-      'Using the preserveTimestamps option in 32-bit node is not recommended;\n\n' +
-      '\tsee https://github.com/jprichardson/node-fs-extra/issues/269',
-      'Warning', 'fs-extra-WARN0002'
-    )
+    console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;\n
+    see https://github.com/jprichardson/node-fs-extra/issues/269`)
   }
 
   const { srcStat, destStat } = stat.checkPathsSync(src, dest, 'copy', opts)
   stat.checkParentPathsSync(src, srcStat, dest, 'copy')
+  return handleFilterAndCopy(destStat, src, dest, opts)
+}
+
+function handleFilterAndCopy (destStat, src, dest, opts) {
   if (opts.filter && !opts.filter(src, dest)) return
   const destParent = path.dirname(dest)
   if (!fs.existsSync(destParent)) mkdirsSync(destParent)
+  return getStats(destStat, src, dest, opts)
+}
+
+function startCopy (destStat, src, dest, opts) {
+  if (opts.filter && !opts.filter(src, dest)) return
   return getStats(destStat, src, dest, opts)
 }
 
@@ -4157,9 +4163,8 @@ function copyDir (src, dest, opts) {
 function copyDirItem (item, src, dest, opts) {
   const srcItem = path.join(src, item)
   const destItem = path.join(dest, item)
-  if (opts.filter && !opts.filter(srcItem, destItem)) return
   const { destStat } = stat.checkPathsSync(srcItem, destItem, 'copy', opts)
-  return getStats(destStat, srcItem, destItem, opts)
+  return startCopy(destStat, srcItem, destItem, opts)
 }
 
 function onLink (destStat, src, dest, opts) {
@@ -4191,7 +4196,7 @@ function onLink (destStat, src, dest, opts) {
     // prevent copy if src is a subdir of dest since unlinking
     // dest in this case would result in removing src contents
     // and therefore a broken symlink would be created.
-    if (stat.isSrcSubdir(resolvedDest, resolvedSrc)) {
+    if (fs.statSync(dest).isDirectory() && stat.isSrcSubdir(resolvedDest, resolvedSrc)) {
       throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`)
     }
     return copyLink(resolvedSrc, dest)
@@ -4204,6 +4209,19 @@ function copyLink (resolvedSrc, dest) {
 }
 
 module.exports = copySync
+
+
+/***/ }),
+
+/***/ 1135:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+module.exports = {
+  copySync: __nccwpck_require__(3338)
+}
 
 
 /***/ }),
@@ -4237,11 +4255,8 @@ function copy (src, dest, opts, cb) {
 
   // Warn about using preserveTimestamps on 32-bit node
   if (opts.preserveTimestamps && process.arch === 'ia32') {
-    process.emitWarning(
-      'Using the preserveTimestamps option in 32-bit node is not recommended;\n\n' +
-      '\tsee https://github.com/jprichardson/node-fs-extra/issues/269',
-      'Warning', 'fs-extra-WARN0001'
-    )
+    console.warn(`fs-extra: Using the preserveTimestamps option in 32-bit node is not recommended;\n
+    see https://github.com/jprichardson/node-fs-extra/issues/269`)
   }
 
   stat.checkPaths(src, dest, 'copy', opts, (err, stats) => {
@@ -4249,12 +4264,8 @@ function copy (src, dest, opts, cb) {
     const { srcStat, destStat } = stats
     stat.checkParentPaths(src, srcStat, dest, 'copy', err => {
       if (err) return cb(err)
-      runFilter(src, dest, opts, (err, include) => {
-        if (err) return cb(err)
-        if (!include) return cb()
-
-        checkParentDir(destStat, src, dest, opts, cb)
-      })
+      if (opts.filter) return handleFilter(checkParentDir, destStat, src, dest, opts, cb)
+      return checkParentDir(destStat, src, dest, opts, cb)
     })
   })
 }
@@ -4271,10 +4282,16 @@ function checkParentDir (destStat, src, dest, opts, cb) {
   })
 }
 
-function runFilter (src, dest, opts, cb) {
-  if (!opts.filter) return cb(null, true)
-  Promise.resolve(opts.filter(src, dest))
-    .then(include => cb(null, include), error => cb(error))
+function handleFilter (onInclude, destStat, src, dest, opts, cb) {
+  Promise.resolve(opts.filter(src, dest)).then(include => {
+    if (include) return onInclude(destStat, src, dest, opts, cb)
+    return cb()
+  }, error => cb(error))
+}
+
+function startCopy (destStat, src, dest, opts, cb) {
+  if (opts.filter) return handleFilter(getStats, destStat, src, dest, opts, cb)
+  return getStats(destStat, src, dest, opts, cb)
 }
 
 function getStats (destStat, src, dest, opts, cb) {
@@ -4390,17 +4407,12 @@ function copyDirItems (items, src, dest, opts, cb) {
 function copyDirItem (items, item, src, dest, opts, cb) {
   const srcItem = path.join(src, item)
   const destItem = path.join(dest, item)
-  runFilter(srcItem, destItem, opts, (err, include) => {
+  stat.checkPaths(srcItem, destItem, 'copy', opts, (err, stats) => {
     if (err) return cb(err)
-    if (!include) return copyDirItems(items, src, dest, opts, cb)
-
-    stat.checkPaths(srcItem, destItem, 'copy', opts, (err, stats) => {
+    const { destStat } = stats
+    startCopy(destStat, srcItem, destItem, opts, err => {
       if (err) return cb(err)
-      const { destStat } = stats
-      getStats(destStat, srcItem, destItem, opts, err => {
-        if (err) return cb(err)
-        return copyDirItems(items, src, dest, opts, cb)
-      })
+      return copyDirItems(items, src, dest, opts, cb)
     })
   })
 }
@@ -4433,7 +4445,7 @@ function onLink (destStat, src, dest, opts, cb) {
         // do not copy if src is a subdir of dest since unlinking
         // dest in this case would result in removing src contents
         // and therefore a broken symlink would be created.
-        if (stat.isSrcSubdir(resolvedDest, resolvedSrc)) {
+        if (destStat.isDirectory() && stat.isSrcSubdir(resolvedDest, resolvedSrc)) {
           return cb(new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`))
         }
         return copyLink(resolvedSrc, dest, cb)
@@ -4462,8 +4474,7 @@ module.exports = copy
 
 const u = (__nccwpck_require__(9046).fromCallback)
 module.exports = {
-  copy: u(__nccwpck_require__(8834)),
-  copySync: __nccwpck_require__(9618)
+  copy: u(__nccwpck_require__(8834))
 }
 
 
@@ -4599,26 +4610,26 @@ module.exports = {
 "use strict";
 
 
-const { createFile, createFileSync } = __nccwpck_require__(2164)
-const { createLink, createLinkSync } = __nccwpck_require__(3797)
-const { createSymlink, createSymlinkSync } = __nccwpck_require__(2549)
+const file = __nccwpck_require__(2164)
+const link = __nccwpck_require__(3797)
+const symlink = __nccwpck_require__(2549)
 
 module.exports = {
   // file
-  createFile,
-  createFileSync,
-  ensureFile: createFile,
-  ensureFileSync: createFileSync,
+  createFile: file.createFile,
+  createFileSync: file.createFileSync,
+  ensureFile: file.createFile,
+  ensureFileSync: file.createFileSync,
   // link
-  createLink,
-  createLinkSync,
-  ensureLink: createLink,
-  ensureLinkSync: createLinkSync,
+  createLink: link.createLink,
+  createLinkSync: link.createLinkSync,
+  ensureLink: link.createLink,
+  ensureLinkSync: link.createLinkSync,
   // symlink
-  createSymlink,
-  createSymlinkSync,
-  ensureSymlink: createSymlink,
-  ensureSymlinkSync: createSymlinkSync
+  createSymlink: symlink.createSymlink,
+  createSymlinkSync: symlink.createSymlinkSync,
+  ensureSymlink: symlink.createSymlink,
+  ensureSymlinkSync: symlink.createSymlinkSync
 }
 
 
@@ -4979,7 +4990,8 @@ const api = [
   'writeFile'
 ].filter(key => {
   // Some commands are not available on some systems. Ex:
-  // fs.cp was added in Node.js v16.7.0
+  // fs.opendir was added in Node.js v12.12.0
+  // fs.rm was added in Node.js v14.14.0
   // fs.lchown is not available on at least some Linux
   return typeof fs[key] === 'function'
 })
@@ -4991,6 +5003,7 @@ Object.assign(exports, fs)
 api.forEach(method => {
   exports[method] = u(fs[method])
 })
+exports.realpath.native = u(fs.realpath.native)
 
 // We differ from mz/fs in that we still ship the old, broken, fs.exists()
 // since we are a drop-in replacement for the native module
@@ -5003,7 +5016,7 @@ exports.exists = function (filename, callback) {
   })
 }
 
-// fs.read(), fs.write(), fs.readv(), & fs.writev() need special treatment due to multiple callback args
+// fs.read(), fs.write(), & fs.writev() need special treatment due to multiple callback args
 
 exports.read = function (fd, buffer, offset, length, position, callback) {
   if (typeof callback === 'function') {
@@ -5035,46 +5048,23 @@ exports.write = function (fd, buffer, ...args) {
   })
 }
 
-// Function signature is
-// s.readv(fd, buffers[, position], callback)
-// We need to handle the optional arg, so we use ...args
-exports.readv = function (fd, buffers, ...args) {
-  if (typeof args[args.length - 1] === 'function') {
-    return fs.readv(fd, buffers, ...args)
-  }
+// fs.writev only available in Node v12.9.0+
+if (typeof fs.writev === 'function') {
+  // Function signature is
+  // s.writev(fd, buffers[, position], callback)
+  // We need to handle the optional arg, so we use ...args
+  exports.writev = function (fd, buffers, ...args) {
+    if (typeof args[args.length - 1] === 'function') {
+      return fs.writev(fd, buffers, ...args)
+    }
 
-  return new Promise((resolve, reject) => {
-    fs.readv(fd, buffers, ...args, (err, bytesRead, buffers) => {
-      if (err) return reject(err)
-      resolve({ bytesRead, buffers })
+    return new Promise((resolve, reject) => {
+      fs.writev(fd, buffers, ...args, (err, bytesWritten, buffers) => {
+        if (err) return reject(err)
+        resolve({ bytesWritten, buffers })
+      })
     })
-  })
-}
-
-// Function signature is
-// s.writev(fd, buffers[, position], callback)
-// We need to handle the optional arg, so we use ...args
-exports.writev = function (fd, buffers, ...args) {
-  if (typeof args[args.length - 1] === 'function') {
-    return fs.writev(fd, buffers, ...args)
   }
-
-  return new Promise((resolve, reject) => {
-    fs.writev(fd, buffers, ...args, (err, bytesWritten, buffers) => {
-      if (err) return reject(err)
-      resolve({ bytesWritten, buffers })
-    })
-  })
-}
-
-// fs.realpath.native sometimes not available if fs is monkey-patched
-if (typeof fs.realpath.native === 'function') {
-  exports.realpath.native = u(fs.realpath.native)
-} else {
-  process.emitWarning(
-    'fs.realpath.native is not a function. Is fs being monkey-patched?',
-    'Warning', 'fs-extra-WARN0003'
-  )
 }
 
 
@@ -5090,13 +5080,15 @@ module.exports = {
   // Export promiseified graceful-fs:
   ...__nccwpck_require__(1176),
   // Export extra methods:
+  ...__nccwpck_require__(1135),
   ...__nccwpck_require__(1335),
   ...__nccwpck_require__(6970),
   ...__nccwpck_require__(55),
   ...__nccwpck_require__(213),
   ...__nccwpck_require__(8605),
+  ...__nccwpck_require__(9665),
   ...__nccwpck_require__(1497),
-  ...__nccwpck_require__(1832),
+  ...__nccwpck_require__(6570),
   ...__nccwpck_require__(3835),
   ...__nccwpck_require__(7357)
 }
@@ -5154,7 +5146,7 @@ module.exports = {
 
 
 const { stringify } = __nccwpck_require__(5902)
-const { outputFileSync } = __nccwpck_require__(1832)
+const { outputFileSync } = __nccwpck_require__(6570)
 
 function outputJsonSync (file, data, options) {
   const str = stringify(data, options)
@@ -5174,7 +5166,7 @@ module.exports = outputJsonSync
 
 
 const { stringify } = __nccwpck_require__(5902)
-const { outputFile } = __nccwpck_require__(1832)
+const { outputFile } = __nccwpck_require__(6570)
 
 async function outputJson (file, data, options = {}) {
   const str = stringify(data, options)
@@ -5273,22 +5265,20 @@ module.exports.checkPath = function checkPath (pth) {
 
 /***/ }),
 
-/***/ 1497:
+/***/ 9665:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const u = (__nccwpck_require__(9046).fromCallback)
 module.exports = {
-  move: u(__nccwpck_require__(2231)),
-  moveSync: __nccwpck_require__(2047)
+  moveSync: __nccwpck_require__(6445)
 }
 
 
 /***/ }),
 
-/***/ 2047:
+/***/ 6445:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5296,7 +5286,7 @@ module.exports = {
 
 const fs = __nccwpck_require__(7758)
 const path = __nccwpck_require__(1017)
-const copySync = (__nccwpck_require__(1335).copySync)
+const copySync = (__nccwpck_require__(1135).copySync)
 const removeSync = (__nccwpck_require__(7357).removeSync)
 const mkdirpSync = (__nccwpck_require__(8605).mkdirpSync)
 const stat = __nccwpck_require__(3901)
@@ -5339,14 +5329,27 @@ function rename (src, dest, overwrite) {
 function moveAcrossDevice (src, dest, overwrite) {
   const opts = {
     overwrite,
-    errorOnExist: true,
-    preserveTimestamps: true
+    errorOnExist: true
   }
   copySync(src, dest, opts)
   return removeSync(src)
 }
 
 module.exports = moveSync
+
+
+/***/ }),
+
+/***/ 1497:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const u = (__nccwpck_require__(9046).fromCallback)
+module.exports = {
+  move: u(__nccwpck_require__(2231))
+}
 
 
 /***/ }),
@@ -5370,8 +5373,6 @@ function move (src, dest, opts, cb) {
     cb = opts
     opts = {}
   }
-
-  opts = opts || {}
 
   const overwrite = opts.overwrite || opts.clobber || false
 
@@ -5421,8 +5422,7 @@ function rename (src, dest, overwrite, cb) {
 function moveAcrossDevice (src, dest, overwrite, cb) {
   const opts = {
     overwrite,
-    errorOnExist: true,
-    preserveTimestamps: true
+    errorOnExist: true
   }
   copy(src, dest, opts, err => {
     if (err) return cb(err)
@@ -5435,7 +5435,7 @@ module.exports = move
 
 /***/ }),
 
-/***/ 1832:
+/***/ 6570:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5511,19 +5511,334 @@ module.exports = {
 
 const fs = __nccwpck_require__(7758)
 const u = (__nccwpck_require__(9046).fromCallback)
+const rimraf = __nccwpck_require__(8761)
 
 function remove (path, callback) {
-  fs.rm(path, { recursive: true, force: true }, callback)
+  // Node 14.14.0+
+  if (fs.rm) return fs.rm(path, { recursive: true, force: true }, callback)
+  rimraf(path, callback)
 }
 
 function removeSync (path) {
-  fs.rmSync(path, { recursive: true, force: true })
+  // Node 14.14.0+
+  if (fs.rmSync) return fs.rmSync(path, { recursive: true, force: true })
+  rimraf.sync(path)
 }
 
 module.exports = {
   remove: u(remove),
   removeSync
 }
+
+
+/***/ }),
+
+/***/ 8761:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const fs = __nccwpck_require__(7758)
+const path = __nccwpck_require__(1017)
+const assert = __nccwpck_require__(9491)
+
+const isWindows = (process.platform === 'win32')
+
+function defaults (options) {
+  const methods = [
+    'unlink',
+    'chmod',
+    'stat',
+    'lstat',
+    'rmdir',
+    'readdir'
+  ]
+  methods.forEach(m => {
+    options[m] = options[m] || fs[m]
+    m = m + 'Sync'
+    options[m] = options[m] || fs[m]
+  })
+
+  options.maxBusyTries = options.maxBusyTries || 3
+}
+
+function rimraf (p, options, cb) {
+  let busyTries = 0
+
+  if (typeof options === 'function') {
+    cb = options
+    options = {}
+  }
+
+  assert(p, 'rimraf: missing path')
+  assert.strictEqual(typeof p, 'string', 'rimraf: path should be a string')
+  assert.strictEqual(typeof cb, 'function', 'rimraf: callback function required')
+  assert(options, 'rimraf: invalid options argument provided')
+  assert.strictEqual(typeof options, 'object', 'rimraf: options should be object')
+
+  defaults(options)
+
+  rimraf_(p, options, function CB (er) {
+    if (er) {
+      if ((er.code === 'EBUSY' || er.code === 'ENOTEMPTY' || er.code === 'EPERM') &&
+          busyTries < options.maxBusyTries) {
+        busyTries++
+        const time = busyTries * 100
+        // try again, with the same exact callback as this one.
+        return setTimeout(() => rimraf_(p, options, CB), time)
+      }
+
+      // already gone
+      if (er.code === 'ENOENT') er = null
+    }
+
+    cb(er)
+  })
+}
+
+// Two possible strategies.
+// 1. Assume it's a file.  unlink it, then do the dir stuff on EPERM or EISDIR
+// 2. Assume it's a directory.  readdir, then do the file stuff on ENOTDIR
+//
+// Both result in an extra syscall when you guess wrong.  However, there
+// are likely far more normal files in the world than directories.  This
+// is based on the assumption that a the average number of files per
+// directory is >= 1.
+//
+// If anyone ever complains about this, then I guess the strategy could
+// be made configurable somehow.  But until then, YAGNI.
+function rimraf_ (p, options, cb) {
+  assert(p)
+  assert(options)
+  assert(typeof cb === 'function')
+
+  // sunos lets the root user unlink directories, which is... weird.
+  // so we have to lstat here and make sure it's not a dir.
+  options.lstat(p, (er, st) => {
+    if (er && er.code === 'ENOENT') {
+      return cb(null)
+    }
+
+    // Windows can EPERM on stat.  Life is suffering.
+    if (er && er.code === 'EPERM' && isWindows) {
+      return fixWinEPERM(p, options, er, cb)
+    }
+
+    if (st && st.isDirectory()) {
+      return rmdir(p, options, er, cb)
+    }
+
+    options.unlink(p, er => {
+      if (er) {
+        if (er.code === 'ENOENT') {
+          return cb(null)
+        }
+        if (er.code === 'EPERM') {
+          return (isWindows)
+            ? fixWinEPERM(p, options, er, cb)
+            : rmdir(p, options, er, cb)
+        }
+        if (er.code === 'EISDIR') {
+          return rmdir(p, options, er, cb)
+        }
+      }
+      return cb(er)
+    })
+  })
+}
+
+function fixWinEPERM (p, options, er, cb) {
+  assert(p)
+  assert(options)
+  assert(typeof cb === 'function')
+
+  options.chmod(p, 0o666, er2 => {
+    if (er2) {
+      cb(er2.code === 'ENOENT' ? null : er)
+    } else {
+      options.stat(p, (er3, stats) => {
+        if (er3) {
+          cb(er3.code === 'ENOENT' ? null : er)
+        } else if (stats.isDirectory()) {
+          rmdir(p, options, er, cb)
+        } else {
+          options.unlink(p, cb)
+        }
+      })
+    }
+  })
+}
+
+function fixWinEPERMSync (p, options, er) {
+  let stats
+
+  assert(p)
+  assert(options)
+
+  try {
+    options.chmodSync(p, 0o666)
+  } catch (er2) {
+    if (er2.code === 'ENOENT') {
+      return
+    } else {
+      throw er
+    }
+  }
+
+  try {
+    stats = options.statSync(p)
+  } catch (er3) {
+    if (er3.code === 'ENOENT') {
+      return
+    } else {
+      throw er
+    }
+  }
+
+  if (stats.isDirectory()) {
+    rmdirSync(p, options, er)
+  } else {
+    options.unlinkSync(p)
+  }
+}
+
+function rmdir (p, options, originalEr, cb) {
+  assert(p)
+  assert(options)
+  assert(typeof cb === 'function')
+
+  // try to rmdir first, and only readdir on ENOTEMPTY or EEXIST (SunOS)
+  // if we guessed wrong, and it's not a directory, then
+  // raise the original error.
+  options.rmdir(p, er => {
+    if (er && (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM')) {
+      rmkids(p, options, cb)
+    } else if (er && er.code === 'ENOTDIR') {
+      cb(originalEr)
+    } else {
+      cb(er)
+    }
+  })
+}
+
+function rmkids (p, options, cb) {
+  assert(p)
+  assert(options)
+  assert(typeof cb === 'function')
+
+  options.readdir(p, (er, files) => {
+    if (er) return cb(er)
+
+    let n = files.length
+    let errState
+
+    if (n === 0) return options.rmdir(p, cb)
+
+    files.forEach(f => {
+      rimraf(path.join(p, f), options, er => {
+        if (errState) {
+          return
+        }
+        if (er) return cb(errState = er)
+        if (--n === 0) {
+          options.rmdir(p, cb)
+        }
+      })
+    })
+  })
+}
+
+// this looks simpler, and is strictly *faster*, but will
+// tie up the JavaScript thread and fail on excessively
+// deep directory trees.
+function rimrafSync (p, options) {
+  let st
+
+  options = options || {}
+  defaults(options)
+
+  assert(p, 'rimraf: missing path')
+  assert.strictEqual(typeof p, 'string', 'rimraf: path should be a string')
+  assert(options, 'rimraf: missing options')
+  assert.strictEqual(typeof options, 'object', 'rimraf: options should be object')
+
+  try {
+    st = options.lstatSync(p)
+  } catch (er) {
+    if (er.code === 'ENOENT') {
+      return
+    }
+
+    // Windows can EPERM on stat.  Life is suffering.
+    if (er.code === 'EPERM' && isWindows) {
+      fixWinEPERMSync(p, options, er)
+    }
+  }
+
+  try {
+    // sunos lets the root user unlink directories, which is... weird.
+    if (st && st.isDirectory()) {
+      rmdirSync(p, options, null)
+    } else {
+      options.unlinkSync(p)
+    }
+  } catch (er) {
+    if (er.code === 'ENOENT') {
+      return
+    } else if (er.code === 'EPERM') {
+      return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er)
+    } else if (er.code !== 'EISDIR') {
+      throw er
+    }
+    rmdirSync(p, options, er)
+  }
+}
+
+function rmdirSync (p, options, originalEr) {
+  assert(p)
+  assert(options)
+
+  try {
+    options.rmdirSync(p)
+  } catch (er) {
+    if (er.code === 'ENOTDIR') {
+      throw originalEr
+    } else if (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM') {
+      rmkidsSync(p, options)
+    } else if (er.code !== 'ENOENT') {
+      throw er
+    }
+  }
+}
+
+function rmkidsSync (p, options) {
+  assert(p)
+  assert(options)
+  options.readdirSync(p).forEach(f => rimrafSync(path.join(p, f), options))
+
+  if (isWindows) {
+    // We only end up here once we got ENOTEMPTY at least once, and
+    // at this point, we are guaranteed to have removed all the kids.
+    // So, we know that it won't be ENOENT or ENOTDIR or anything else.
+    // try really hard to delete stuff on windows, because it has a
+    // PROFOUNDLY annoying habit of not closing handles promptly when
+    // files are deleted, resulting in spurious ENOTEMPTY errors.
+    const startTime = Date.now()
+    do {
+      try {
+        const ret = options.rmdirSync(p, options)
+        return ret
+      } catch {}
+    } while (Date.now() - startTime < 500) // give up after 500ms
+  } else {
+    const ret = options.rmdirSync(p, options)
+    return ret
+  }
+}
+
+module.exports = rimraf
+rimraf.sync = rimrafSync
 
 
 /***/ }),
@@ -7908,7 +8223,7 @@ Writer.prototype._stat = function (current) {
 
     // if it's a type change, then we need to clobber or error.
     // if it's not a type change, then let the impl take care of it.
-    if (currentType !== self.type || self.type === 'File' && current.nlink > 1) {
+    if (currentType !== self.type) {
       return rimraf(self._path, function (er) {
         if (er) return self.error(er)
         self._old = null
