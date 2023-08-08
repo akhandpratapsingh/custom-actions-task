@@ -1,6 +1,6 @@
-# ServiceNow DevOps Register Security Scan Results GitHub Action
+# ServiceNow DevOps Register SBOM Scan Results GitHub Action
 
-This custom action needs to be added at step level in a job to register security scan resutls in ServiceNow instance.
+This custom action needs to be added at step level in a job to register SBOM scan resutls in ServiceNow instance.
 
 # Usage
 ## Step 1: Prepare values for setting up your secrets for Actions
