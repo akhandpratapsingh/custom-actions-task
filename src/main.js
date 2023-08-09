@@ -1,7 +1,6 @@
 const core = require('@actions/core');
 const axios = require('axios');
-const fs = require('fstream');
-const fse = require('fs-extra');
+const fs = require('fs');
 
 (async function main() {
     let instanceUrl = core.getInput('instance-url', { required: true });
@@ -24,13 +23,8 @@ const fse = require('fs-extra');
     // File Stream
     let fileStreamData;
     try {
-        const exists = await fse.pathExists(filePath);
-        if(exists)
-            fileStreamData = fs.Reader(filePath);
-        else{
-            core.setFailed(`${filePath} path is incorrect or the file does not exist`);
-            return;
-        }
+        await fs.statSync(filePath);
+        fileStreamData = fs.createReadStream(filePath);
     } catch (e) {
         core.setFailed(`${filePath} path is incorrect or the file does not exist: ${e}`);
         return;
@@ -164,7 +158,6 @@ const fse = require('fs-extra');
         // API call to register SBOM 
         responseData = await axios.post(restEndpoint, JSON.stringify(payload), httpHeaders);
 
-        console.log(responseData.data); // TO REMOVE
         if (responseData.data && responseData.data.result)
             console.log("\n \x1b[1m\x1b[32m SUCCESS: Sbom Scan registration was successful" + '\x1b[0m\x1b[0m');
         else
