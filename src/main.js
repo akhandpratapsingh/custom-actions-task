@@ -94,7 +94,6 @@ const fs = require('fs');
 
         // API call
         responseData = await axios.post(restEndpointUploadFile, fileStreamData, httpHeadersForStream);
-        console.log(responseData.data);  // TO Remove
 
         //API response check
         if (responseData.data && responseData.data.result && 
