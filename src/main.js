@@ -144,7 +144,7 @@ const fs = require('fs');
 
         payload = {
             pipelineInfo: pipelineInfo,
-            sbomMetaData: sbomMetaData
+            sbomInfo: sbomMetaData
         };
         core.debug('Sbom scan results Custon Action payload is : ${JSON.stringify(payload)}\n\n');
     } catch (e) {

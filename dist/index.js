@@ -9558,7 +9558,7 @@ const fs = __nccwpck_require__(7147);
 
         payload = {
             pipelineInfo: pipelineInfo,
-            sbomMetaData: sbomMetaData
+            sbomInfo: sbomMetaData
         };
         core.debug('Sbom scan results Custon Action payload is : ${JSON.stringify(payload)}\n\n');
     } catch (e) {
