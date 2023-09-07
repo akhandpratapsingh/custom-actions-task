@@ -67,7 +67,7 @@ deploy:
           security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}'
 ```
 
-## GitHub-Checkmarx SAST:
+### GitHub-Checkmarx SAST:
 ```yaml
 deploy:
     name: Deploy
@@ -125,7 +125,7 @@ deploy:
           security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}'
 ```
 
-## GitHub-Checkmarx SAST:
+### GitHub-Checkmarx SAST:
 ```yaml
 deploy:
     name: Deploy
