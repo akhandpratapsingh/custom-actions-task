@@ -30,6 +30,8 @@ Use needs to configure the identified upstream job. See [test.yml](.github/workf
 ## Step 4: Configure the GitHub Action if need to adapt for your needs or workflows
 
 # For Token based Authentication which is available from v2.0.0 at ServiceNow instance
+
+## GitHub-Veracode:
 ```yaml
 deploy:
     name: Deploy
@@ -44,8 +46,45 @@ deploy:
           tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
           context-github: ${{ toJSON(github) }}
           job-name: 'Deploy'
-          security-result-attributes:  '{"scanner":"Veracode","applicationName":"azure","buildVersion":"jenkins-Veracode with Step-27"}'
+          security-result-attributes:  '{"scanner": "Veracode", "applicationName": "", "buildVersion": "",  "securityToolId": ""}'
 ```
+
+## GitHub-Checkmarx One:
+```yaml
+deploy:
+    name: Deploy
+    needs: <upstream job>
+    runs-on: ubuntu-latest
+    steps:     
+      - name: ServiceNow DevOps Security Results
+        uses: ServiceNow/servicenow-devops-security-result@v2.0.0
+        with:
+          devops-integration-token: ${{ secrets.SN_DEVOPS_INTEGRATION_TOKEN }}
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          context-github: ${{ toJSON(github) }}
+          job-name: 'Deploy'
+          security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}"
+```
+
+## GitHub-Checkmarx SAST:
+```yaml
+deploy:
+    name: Deploy
+    needs: <upstream job>
+    runs-on: ubuntu-latest
+    steps:     
+      - name: ServiceNow DevOps Security Results
+        uses: ServiceNow/servicenow-devops-security-result@v2.0.0
+        with:
+          devops-integration-token: ${{ secrets.SN_DEVOPS_INTEGRATION_TOKEN }}
+          instance-url: ${{ secrets.SN_INSTANCE_URL }}
+          tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
+          context-github: ${{ toJSON(github) }}
+          job-name: 'Deploy'
+          security-result-attributes:  '{"scanner": "CheckmarxSAST", "projectName": "", "projectId": "","securityToolId": ""}"
+```
+
 # For Basic Authentication at ServiceNow instance
 ```yaml
 deploy:
