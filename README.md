@@ -49,7 +49,7 @@ deploy:
           security-result-attributes:  '{"scanner": "Veracode", "applicationName": "", "buildVersion": "",  "securityToolId": ""}'
 ```
 
-### GitHub-Checkmarx One:
+### GitHub-CheckmarxOne:
 ```yaml
 deploy:
     name: Deploy
@@ -67,7 +67,7 @@ deploy:
           security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}'
 ```
 
-### GitHub-Checkmarx SAST:
+### GitHub-CheckmarxSAST:
 ```yaml
 deploy:
     name: Deploy
@@ -106,7 +106,7 @@ deploy:
           security-result-attributes:  '{"scanner": "Veracode", "applicationName": "", "buildVersion": "",  "securityToolId": ""}'
 ```
 
-### GitHub-Checkmarx One:
+### GitHub-CheckmarxOne:
 ```yaml
 deploy:
     name: Deploy
@@ -125,7 +125,7 @@ deploy:
           security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}'
 ```
 
-### GitHub-Checkmarx SAST:
+### GitHub-CheckmarxSAST:
 ```yaml
 deploy:
     name: Deploy
