@@ -177,19 +177,19 @@ The values for secrets should be setup in Step 1. Secrets should be created in S
 
   ```
   {
-  scanner: # Scanning tool and is required e.g. Veracode or CheckmarxOne or CheckmarxSAST
+	"scanner": "", # Scanning tool and is required e.g. Veracode or CheckmarxOne or CheckmarxSAST
 
-  applicationName: # Name of your Veracode application and is required. This attribute is applicable only for Veracode.
+	"applicationName": "", # Name of your Veracode application and is required. This attribute is applicable only for Veracode.
 
-  buildVersion: # Veracode Scan name / build version and is optional. This attribute is applicable only for Veracode.
+	"buildVersion": "", # Veracode Scan name / build version and is optional. This attribute is applicable only for Veracode.
 
-  projectName: # Name of your CheckMarxOne project and is required. This attribute is applicable only for Checkmarx One.
+	"projectName": "", # Name of your CheckMarxOne project and is required. This attribute is applicable only for Checkmarx One.
 
-  projectId: # Id of your CheckMarxOne / CheckmarxSAST project and is required. This attribute is applicable only for CheckMarxOne and CheckmarxSAST.
+	"projectId": "", # Id of your CheckMarxOne / CheckmarxSAST project and is required. This attribute is applicable only for CheckMarxOne and CheckmarxSAST.
+	
+	"scanId": "", # CheckmarxOne scan id and is optional. This attribute is applicable only for Checkmarx One.
 
-  scanId: # CheckmarxOne scan id and is optional. This attribute is applicable only for Checkmarx One.
-
-  securityToolId: # Security tool onboarded in ServiceNow (sys_id of the onboarded security tool) and is optional.
+	"securityToolId": "" # Security tool onboarded in ServiceNow (sys_id of the onboarded security tool) and is optional.
   }
   ```
 
