@@ -64,7 +64,7 @@ deploy:
           tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
           context-github: ${{ toJSON(github) }}
           job-name: 'Deploy'
-          security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}"
+          security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}'
 ```
 
 ## GitHub-Checkmarx SAST:
@@ -82,7 +82,7 @@ deploy:
           tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
           context-github: ${{ toJSON(github) }}
           job-name: 'Deploy'
-          security-result-attributes:  '{"scanner": "CheckmarxSAST", "projectName": "", "projectId": "","securityToolId": ""}"
+          security-result-attributes:  '{"scanner": "CheckmarxSAST", "projectName": "", "projectId": "","securityToolId": ""}'
 ```
 
 # For Basic Authentication at ServiceNow instance
@@ -122,7 +122,7 @@ deploy:
           tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
           context-github: ${{ toJSON(github) }}
           job-name: 'Deploy'
-          security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}"
+          security-result-attributes:  '{"scanner": "CheckmarxOne", "projectName": "", "projectId": "", "scanId":"", "securityToolId": ""}'
 ```
 
 ## GitHub-Checkmarx SAST:
@@ -141,7 +141,7 @@ deploy:
           tool-id: ${{ secrets.SN_ORCHESTRATION_TOOL_ID }}
           context-github: ${{ toJSON(github) }}
           job-name: 'Deploy'
-          security-result-attributes:  '{"scanner": "CheckmarxSAST", "projectName": "", "projectId": "","securityToolId": ""}"
+          security-result-attributes:  '{"scanner": "CheckmarxSAST", "projectName": "", "projectId": "","securityToolId": ""}'
 ```
 The values for secrets should be setup in Step 1. Secrets should be created in Step 2.
 
